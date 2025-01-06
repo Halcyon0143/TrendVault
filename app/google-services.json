@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "809940725049",
+    "project_id": "trendvault-1",
+    "storage_bucket": "trendvault-1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:809940725049:android:b65b759d568389204fcce8",
+        "android_client_info": {
+          "package_name": "com.example.trendvault"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCrwYCgnpw0Q7o4dQjKulqTvW12FRW8zMM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
