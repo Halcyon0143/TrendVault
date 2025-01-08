@@ -1,13 +1,17 @@
 package com.example.trendvault.Activity
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +24,7 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
@@ -47,6 +53,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
+import com.example.trendvault.Model.CategoryModel
 import com.example.trendvault.Model.SliderModel
 import com.example.trendvault.R
 import com.example.trendvault.ViewModel.MainViewModel
@@ -65,51 +72,68 @@ class MainActivity : BaseActivity() {
 }
 
 @Composable
-fun MainActivityScreen(){
+fun MainActivityScreen() {
     val viewModel = MainViewModel()
-    val banners = remember{ mutableStateListOf<SliderModel>()}
+    val banners = remember { mutableStateListOf<SliderModel>() }
+    val categories = remember { mutableStateListOf<CategoryModel>() }
 
     var showBannerLoading by remember { mutableStateOf(true) }
-    LaunchedEffect(Unit){
-        viewModel.loadBanner().observeForever{
+    var showCategoryLoading by remember { mutableStateOf(true) }
+
+    //banner
+    LaunchedEffect(Unit) {
+        viewModel.loadBanner().observeForever {
             banners.clear()
             banners.addAll(it)
             showBannerLoading = false
         }
 
     }
+
+    //category
+    LaunchedEffect(Unit) {
+        viewModel.loadCategory().observeForever {
+            categories.clear()
+            categories.addAll(it)
+            showCategoryLoading = false
+        }
+
+    }
+
     ConstraintLayout(
         modifier = Modifier.background(Color.White)
     ) {
-        val(scrollList,bottomMenu)=createRefs()
+        val (scrollList, bottomMenu) = createRefs()
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                . constrainAs(scrollList){
+                .constrainAs(scrollList) {
                     top.linkTo(parent.top)
                     bottom.linkTo(parent.bottom)
                     end.linkTo(parent.end)
                     start.linkTo(parent.start)
                 }
 
-        ){
-            item{
+        ) {
+            item {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 70.dp)
-                        . padding(horizontal = 16.dp),
+                        .padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
-                ){
-                    Column(){
-                        Text("Welcome Back",color = Color.Black)
-                        Text("Akshat",
+                ) {
+                    Column() {
+                        Text("Welcome Back", color = Color.Black)
+                        Text(
+                            "Akshat",
                             color = Color.Black,
                             fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold)
+                            fontWeight = FontWeight.Bold
+                        )
                     }
-                    Row{
+                    Row {
                         Image(
                             painter = painterResource(id = R.drawable.search_icon),
                             contentDescription = null
@@ -124,24 +148,140 @@ fun MainActivityScreen(){
             }
 
             // Loading/Displaying Banners
-            item{
-                if(showBannerLoading){
+            item {
+                if (showBannerLoading) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .height(200.dp),
                         contentAlignment = Alignment.Center
-                    ){
+                    ) {
                         CircularProgressIndicator()
                     }
-                }else{
+                } else {
                     Banners(banners)
 
                 }
             }
 
+            // Loading/Displaying Categories
+            item {
+                Text(
+                    text = "Offical Brand",
+                    color = Color.Black,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 24.dp)
+                        .padding(horizontal = 16.dp)
+                )
+            }
+            item {
+                if (showCategoryLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+
+                    }
+                } else {
+                    CategoryList(categories)
+                }
+            }
+
+
         }
     }
+}
+
+@Composable
+fun CategoryList(categories: SnapshotStateList<CategoryModel>) {
+    var selectedIndex by remember { mutableStateOf(-1) }
+    val context = LocalContext.current
+
+    LazyRow(
+        modifier = Modifier
+            .fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(24.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp)
+    ) {
+        items(categories.size) { index ->
+            CategoryItem(item=categories[index],
+            isSelected = selectedIndex == index,
+                onItemClick = {
+                    selectedIndex = index
+                    Handler(Looper.getMainLooper()).postDelayed({
+
+
+                    },500)
+
+                    }
+            )
+
+
+        }
+
+    }
+
+}
+
+@Composable
+fun CategoryItem(item: CategoryModel, isSelected: Boolean, onItemClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .clickable(onClick = onItemClick), horizontalAlignment = Alignment.CenterHorizontally
+    )
+    {
+        AsyncImage(
+            model = (item.picUrl),
+            contentDescription = item.title,
+            modifier = Modifier
+                .size(if (isSelected) 60.dp else 50.dp)
+                .background(
+                    color = if (isSelected) colorResource(R.color.darkBrown) else colorResource(R.color.lightBrown),
+                    shape = RoundedCornerShape(100.dp)
+                ),
+            contentScale = ContentScale.Inside,
+            colorFilter = if(isSelected){
+                ColorFilter.tint(Color.White)
+            }else{
+                ColorFilter.tint(Color.Black)
+            }
+        )
+        Spacer(modifier = Modifier.padding(top=8.dp))
+        Text(
+            text = item.title,
+            color = colorResource(R.color.darkBrown),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+fun SectionTitle(title: String, action: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 24.dp)
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = title,
+            color = Color.Black,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            text = action,
+            color = colorResource(R.color.darkBrown)
+        )
+    }
+
 }
 
 // Banners Composable(Abstraction function)
@@ -150,18 +290,19 @@ fun MainActivityScreen(){
 fun Banners(banners: List<SliderModel>) {
     AutoSlidingCarousel(banners = banners)
 }
+
 // AutoSlidingCarousel
 @OptIn(ExperimentalPagerApi::class)
 @Composable
 fun AutoSlidingCarousel(
     modifier: Modifier = Modifier.padding(top = 16.dp),
-    pagerState: PagerState= remember { PagerState() }, // pagerState is a state object used to manage and track the behavior of a pager in Jetpack Compose
+    pagerState: PagerState = remember { PagerState() }, // pagerState is a state object used to manage and track the behavior of a pager in Jetpack Compose
     banners: List<SliderModel>
 ) {
     val isDragged by pagerState.interactionSource.collectIsDraggedAsState()
 
-    Column(modifier = modifier.fillMaxSize()){
-        HorizontalPager (count = banners.size,state = pagerState){page->
+    Column(modifier = modifier.fillMaxSize()) {
+        HorizontalPager(count = banners.size, state = pagerState) { page ->
             //Loads images from a URL or a local resource asynchronously without blocking the main UI thread
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
@@ -171,7 +312,7 @@ fun AutoSlidingCarousel(
                 contentScale = ContentScale.FillBounds,
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
-                    .padding(top = 16.dp,bottom = 8.dp)
+                    .padding(top = 16.dp, bottom = 8.dp)
                     .height(150.dp)
             )
         }
@@ -187,37 +328,39 @@ fun AutoSlidingCarousel(
     }
 
 }
+
 @Composable
 fun DotIndicator(
-    modifier: Modifier= Modifier,
+    modifier: Modifier = Modifier,
     totalDots: Int,
     selectedIndex: Int,
-    selectedColor: Color= colorResource(R.color.darkBrown),
-    unSelectedColor: Color= colorResource(R.color.grey),
-    dotSize:Dp
-){
+    selectedColor: Color = colorResource(R.color.darkBrown),
+    unSelectedColor: Color = colorResource(R.color.grey),
+    dotSize: Dp
+) {
     LazyRow(
         modifier = modifier
             .wrapContentSize()
-    ){
-        items(totalDots){index ->
+    ) {
+        items(totalDots) { index ->
             IndicatorDot(
                 size = dotSize,
                 color = if (index == selectedIndex) selectedColor else unSelectedColor
             )
-            if(index !=totalDots - 1){
+            if (index != totalDots - 1) {
                 Spacer(modifier = Modifier.padding(horizontal = 2.dp))
             }
 
         }
     }
 }
+
 @Composable
 fun IndicatorDot(
     modifier: Modifier = Modifier,
     size: Dp,
-    color:Color
-){
+    color: Color
+) {
     Box(
         modifier = modifier
             .size(size)
