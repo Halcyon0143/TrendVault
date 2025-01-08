@@ -1,10 +1,8 @@
-package com.example.trendvault
+package com.example.trendvault.Activity
 
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,8 +20,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import com.example.trendvault.R
 
 class IntroActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,9 +28,10 @@ class IntroActivity : BaseActivity() {
 
         setContent { IntroScreen(
             onClick = {
-                startActivity(Intent(this,MainActivity::class.java))
+                startActivity(Intent(this, MainActivity::class.java))
             }
-        )}
+        )
+        }
     }
 }
 
